@@ -1,0 +1,135 @@
+---
+title: "MiniProj2"
+output: html_document
+date: "2024-11-28"
+---
+
+
+```{r}
+
+library(GGally)
+library(dplyr)
+library(corrplot)
+library(leaps)
+library("RColorBrewer")
+library(car)
+source("resFigs.R")
+```
+
+```{r}
+used_cars <- read.csv("usedCars.csv")
+
+#indicator variable for transmission, 1 = Automatic, 0 = Manual
+used_cars$Transmission <- ifelse(used_cars$Transmission == "Automatic", 1,0)
+#indicator variable for transmission, 1 = Automatic, 0 = Manua
+used_cars$FuelType <- ifelse(used_cars$FuelType == "Petrol", 1, 0)
+
+#Dropping carID variable
+used_cars <- select(used_cars, -1)
+head(used_cars)
+
+```
+
+```{r}
+#training/testing split
+
+set.seed(3265)
+train_ind <- sample(1:nrow(used_cars), floor(0.8 *nrow(used_cars)))
+set.seed(NULL)
+
+train <- used_cars[train_ind, ] 
+test <- used_cars[-train_ind, ]
+
+
+```
+
+
+```{r}
+#correlation matrix of every variable
+
+correlation_matrix <- cor(train, method = "pearson")
+correlation_matrix
+```
+```{r}
+correlation_matrix["Price", ]
+
+```
+```{r}
+#optimal set of predictor variables
+bestfits <- regsubsets(Price ~ KmDriven + FuelType + Transmission +  Mileage + Engine + Power + Age + Seats,
+                       data = train, nbest = 2)
+
+plot(bestfits, scale = "adjr2")
+```
+
+
+
+
+```{r}
+
+#Full Regression Model
+model <- lm(Price ~ KmDriven + FuelType + Transmission + Mileage + Power + Seats, data = train)
+
+
+summary(model)
+```
+
+```{r}
+#checking for multicollinearity
+vif(model)
+```
+multi-collinearity not a issue in full model
+
+# Validity of the model
+```{r}
+res.figs(model)
+```   
+```{r}
+plot(model , which =1)
+```
+
+
+```{r}
+plot(model, which = 4)
+```
+there is one high influential point which is affecting the model
+
+
+```{r}
+
+#Checking for independence 
+durbinWatsonTest(model)
+```
+
+Since p-value > 0.05 we fail to reject null hypothesis meaning variables are independent.
+
+
+```{r}
+ncvTest(model)
+```
+
+since p-value < 0.05 fail to reject null hypothesis meaning there is significant evidence of variance not being constant
+
+
+# Log transformation of response variable
+```{r}
+
+# Build a linear regression model with Mileage × Age and FuelType × Engine interactions
+model <- lm(log(Price) ~ Mileage * Age + FuelType * Engine + Transmission + Power + Seats, 
+            data = train)
+
+```
+
+```{r}
+ncvTest(log_model)
+```
+```{r}
+plot(log_model, which = 1)  # Residuals vs. Fitted plot
+
+
+```
+
+```{r}
+crPlots(log_model)  # Generate component + residual plots
+```
+

@@ -1,0 +1,5 @@
+"0","log_fitted_values_2 <- fitted(log_model_2)"
+"0","plot(fitted_values, residuals(log_model_2),"
+"0","     xlab = ""Fitted Values"","
+"0","     ylab = ""Residuals"","
+"0","     main = ""Residuals Plot"")"

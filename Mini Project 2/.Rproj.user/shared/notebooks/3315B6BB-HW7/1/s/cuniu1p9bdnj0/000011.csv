@@ -1,0 +1,6 @@
+"0","     "
+"0","legend(""bottomleft"", legend = c(""4-Cylinders"", "
+"0","                              ""6-Cylinders"","
+"0","                              ""8-Cylinders""),"
+"0","       col = c(""red"",""blue"",""green""), "
+"0","       pch = 19)"

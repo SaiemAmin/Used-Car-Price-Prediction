@@ -1,0 +1,402 @@
+---
+title: "HW6"
+output: html_document
+date: "2024-11-11"
+---
+
+## 1
+```{r}
+library(Stat2Data)
+data(Clothing)
+head(Clothing, 5)
+ 
+```
+## 2 Response and Predictor variables
+The response variable is the "Amount" and predictor variables could be Dollar12, Dollar24, Freq12, Freq24, Recency, and Card.
+
+## 3 Removing customers who returned their purchases
+
+```{r}
+
+#Filtering out the customers who returned their purchases
+Clothing <- Clothing[Clothing$Amount > 0 , ]
+nrow(Clothing)
+
+
+```
+## 4 Correlation Matrix
+
+```{r}
+cor(Clothing, method = "pearson")
+```
+The two predictors I would choose are Freq24(0.247) and Dollar24(0.934) have the highest positive correlation with the response variable (Amount). 
+
+Issue: Dollar12 and Dollar24 are highly correlated (0.9728). Including both in the regression model may cause multicollinearity and may provide redundant information.
+
+
+## 5 Population Equation
+
+$\hat{Y}$ = $\beta_0$ + $\beta_1$(Recency) + $\beta_2$(Freq12) + $\beta_3$(Dollar12) + $\beta_4$(Card) + $\epsilon$
+
+### Notations:
+$\hat{Y}$: Predicted response variable (Amount)
+- $\beta_0$: Intercept term
+- $\beta_1, \beta_2, \beta_3, \beta_4$: Coefficients for each predictor
+- **Recency**: Number of months since the last purchase
+- **Freq12**: Number of purchases in the last 12 months
+- **Dollar12**: Dollar amount of purchases in the last 12 months
+- **Card**: Indicator variable for having a private-label credit card (1 = yes, 0 = no)
+- $\epsilon$: Error term
+
+
+## 6 Regression
+
+```{r}
+reg.res <- lm(Amount ~ Recency + Freq12 + Dollar12 + Card, data = Clothing)
+summary(reg.res)
+```
+$\hat{Y}$ = −40080.09 + 1716.37(Recency) − 14235.62(Freq12) + 302.40(Dollar12) − 55129.79(Card)
+
+
+## 7 Model Diagnostics
+
+```{r}
+# Obtain standardized residuals
+std.res <- rstandard(reg.res)
+
+# Obtain fitted values
+fit.vals <- fitted(reg.res)
+
+# Residual plot and Normal Q-Q plot of residuals
+par(mfrow = c(1, 2))  # Partition the plot space
+
+# Residual plot
+plot(x = fit.vals, y = std.res, xlab = "Fitted values", ylab = "Standardized residuals", main = "Residual Plot")
+abline(h = c(-3, 3), col = "blue")
+
+# Q-Q plot of standardized residuals
+qqnorm(std.res, main = "Q-Q Plot of Standardized Residuals")
+qqline(std.res, col = "blue")
+```
+
+
+```{r}
+# Obtain leverage values
+lev.vals <- hatvalues(reg.res)
+
+# Cutoff for leverage (2 * p) / n, where p = number of predictors + intercept, n = sample size
+p <- 5  # 4 predictors + 1 intercept
+n <- nrow(Clothing)  # Sample size
+lev.cut <- (2 * p) / n
+
+# Obtain Cook's distances
+cook.dist <- cooks.distance(reg.res)
+
+# Plot of leverages and Cook's distances
+par(mfrow = c(1, 2))  # Partition the plot space
+
+# Plot of leverages
+plot(lev.vals, xlab = "Index", ylab = "Leverages", main = "Leverage Values")
+abline(h = lev.cut, col = "blue")
+
+# Plot of Cook's distances
+plot(cook.dist, xlab = "Index", ylab = "Cook's Distance", main = "Cook's Distance")
+abline(h = 1, col = "blue")
+```
+
+
+Linearity: The residual plot suggests a non-linear relationship. Consider transforming the response variable or adding polynomial terms.
+Normality of Residuals: The Q-Q plot shows deviations from normality, especially in the tails. This could be addressed by transforming the response variable.
+Homoscedasticity: There is also evidence of heteroscedasticity (variance of residuals increases with fitted values).
+
+High Leverage Point: There is a point with high leverage, suggesting it has unusual predictor values.
+Influential Observation: The same point has a very high Cook’s distance, indicating it has a large influence on the model fit.
+Potential Outlier: This influential point may also be an outlier and could be affecting the accuracy and validity of the regression model.
+
+
+## 8 
+```{r}
+# Removing  the data entry error (Amount = 1506000)
+Clothing <- Clothing[Clothing$Amount != 1506000, ]
+
+#New variable AvgSpent12 and checking if it's 0 or not
+Clothing$AvgSpent12 <- with(Clothing, ifelse(Freq12 == 0, NA, Dollar12 / Freq12))
+nrow(Clothing)
+```
+## 9 Building new model and checking validity 
+
+```{r}
+model_new <- lm(Amount ~ Recency + AvgSpent12 + Card, data = Clothing)
+summary(model_new)
+
+```
+```{r}
+# Obtain standardized residuals
+std.res <- rstandard(model_new)
+
+# Obtain fitted values
+fit.vals <- fitted(model_new)
+
+# Residual plot and Normal Q-Q plot of residuals
+par(mfrow = c(1, 2))  # Partition the plot space
+
+# Residual plot
+plot(x = fit.vals, y = std.res, xlab = "Fitted values", ylab = "Standardized residuals", main = "Residual Plot")
+abline(h = c(-3, 3), col = "blue")
+
+# Q-Q plot of standardized residuals
+qqnorm(std.res, main = "Q-Q Plot of Standardized Residuals")
+qqline(std.res, col = "blue")
+```
+
+```{r}
+# Obtain leverage values
+lev.vals <- hatvalues(model_new)
+
+# Cutoff for leverage (2 * p) / n, where p = number of predictors + intercept, n = sample size
+p <- 5  # 4 predictors + 1 intercept
+n <- nrow(Clothing)  # Sample size
+lev.cut <- (2 * p) / n
+
+# Obtain Cook's distances
+cook.dist <- cooks.distance(model_new)
+
+# Plot of leverages and Cook's distances
+par(mfrow = c(1, 2))  # Partition the plot space
+
+# Plot of leverages
+plot(lev.vals,
+     xlab = "Index",
+     ylab = "Leverages", 
+     main = "Leverage Values")
+abline(h = lev.cut, col = "blue")
+
+# Plot of Cook's distances
+plot(cook.dist, xlab = "Index", ylab = "Cook's Distance", main = "Cook's Distance")
+abline(h = 1, col = "blue")
+qqline(std.res, col = "blue")
+```
+
+
+
+
+
+Linearity: The residuals show better random scatter after removing the outlier (Amount = 1.5 million), but slight non-linearity may still be present.
+Normality: The Q-Q plot improved, with residuals aligning more closely to the 45-degree line. However, deviations at the tails suggest residuals are still slightly heavy-tailed.
+Homoscedasticity: The residual plot indicates mild heteroscedasticity, as the spread of residuals increases with fitted values.
+Leverage Points: One observation near index 50 has high leverage (above 0.3), indicating it has extreme predictor value.
+Cook’s Distance: One point has a Cook’s distance greater than 2, marking it as highly influential. This suggests it could be distorting the regression coefficients and impacting the overall model results.
+
+
+## 10 Log- transformation of the response
+
+```{r}
+
+#Log-transformation of the response
+Clothing$LogAmount <- log(Clothing$Amount)
+
+#Building a model using log transformation 
+model_log <-lm(LogAmount ~ Recency + AvgSpent12 + Card, data = Clothing)
+summary(model_log)
+```
+```{r}
+# Obtain standardized residuals
+std.res <- rstandard(model_log)
+
+# Obtain fitted values
+fit.vals <- fitted(model_log)
+
+# Residual plot and Normal Q-Q plot of residuals
+par(mfrow = c(1, 2))  # Partition the plot space
+
+# Residual plot
+plot(x = fit.vals, y = std.res, xlab = "Fitted values", ylab = "Standardized residuals", main = "Residual Plot")
+abline(h = c(-3, 3), col = "blue")
+
+# Q-Q plot of standardized residuals
+qqnorm(std.res, main = "Q-Q Plot of Standardized Residuals")
+qqline(std.res, col = "blue")
+```
+
+```{r}
+# Obtain leverage values
+lev.vals <- hatvalues(model_log)
+
+# Cutoff for leverage (2 * p) / n, where p = number of predictors + intercept, n = sample size
+p <- 5  # 4 predictors + 1 intercept
+n <- nrow(Clothing)  # Sample size
+lev.cut <- (2 * p) / n
+
+# Obtain Cook's distances
+cook.dist <- cooks.distance(model_log)
+
+# Plot of leverages and Cook's distances
+par(mfrow = c(1, 2))  # Partition the plot space
+
+# Plot of leverages
+plot(lev.vals,
+     xlab = "Index",
+     ylab = "Leverages", 
+     main = "Leverage Values")
+abline(h = lev.cut, col = "blue")
+
+# Plot of Cook's distances
+plot(cook.dist, xlab = "Index", ylab = "Cook's Distance", main = "Cook's Distance")
+abline(h = 1, col = "blue")
+qqline(std.res, col = "blue")
+```
+
+
+Residuals vs Fitted Plot:
+
+The residuals are more evenly scattered around zero, showing an improvement in linearity and homoscedasticity. This suggests that the log transformation helped stabilize the variance and reduced non-linearity.
+However, there are still a few points with large residuals, indicating potential outliers.
+Q-Q Plot of Standardized Residuals:
+
+The Q-Q plot shows better alignment of the residuals with the 45-degree line, indicating an improved normality of residuals after the transformation.
+There are minor deviations at the tails, but these are less pronounced compared to the untransformed model, suggesting the transformation was effective.
+Leverage Values Plot:
+
+Most observations have low leverage, but one point (near index 50) has a high leverage value (~0.3), well above the cutoff of 0.15. This indicates that the point has extreme predictor values and may still influence the model fit.
+Cook’s Distance Plot:
+
+Although no points exceed the typical Cook’s distance cutoff of 1, there is one observation with a noticeably higher Cook’s distance (~0.5), separated from the rest. This suggests that the point is still moderately influential, despite the improvement from the log transformation.
+
+
+## 11 Natural Log
+
+```{r}
+#Natural-log of AvgSpent12
+Clothing$logAvgSpent12 <- log(Clothing$AvgSpent12)
+
+#new regression model
+M1 <- lm(LogAmount ~ Recency + logAvgSpent12 + Card, data = Clothing)
+summary(M1)
+
+```
+```{r}
+# Obtain leverage values
+lev.vals <- hatvalues(M1)
+
+# Cutoff for leverage (2 * p) / n, where p = number of predictors + intercept, n = sample size
+p <- 5  # 4 predictors + 1 intercept
+n <- nrow(Clothing)  # Sample size
+lev.cut <- (2 * p) / n
+
+# Obtain Cook's distances
+cook.dist <- cooks.distance(M1)
+
+# Plot of leverages and Cook's distances
+par(mfrow = c(1, 2))  # Partition the plot space
+
+# Plot of leverages
+plot(lev.vals,
+     xlab = "Index",
+     ylab = "Leverages", 
+     main = "Leverage Values")
+abline(h = lev.cut, col = "blue")
+
+# Plot of Cook's distances
+plot(cook.dist, xlab = "Index", ylab = "Cook's Distance", main = "Cook's Distance")
+abline(h = 1, col = "blue")
+qqline(std.res, col = "blue")
+```
+
+```{r}
+# Obtain standardized residuals
+std.res <- rstandard(M1)
+
+# Obtain fitted values
+fit.vals <- fitted(M1)
+
+# Residual plot and Normal Q-Q plot of residuals
+par(mfrow = c(1, 2))  # Partition the plot space
+
+# Residual plot
+plot(x = fit.vals, y = std.res, xlab = "Fitted values", ylab = "Standardized residuals", main = "Residual Plot")
+abline(h = c(-3, 3), col = "blue")
+
+# Q-Q plot of standardized residuals
+qqnorm(std.res, main = "Q-Q Plot of Standardized Residuals")
+qqline(std.res, col = "blue")
+```
+
+
+Linearity: The residuals are more randomly scattered around zero in the Residuals vs Fitted Plot, indicating improved linearity. However, a slight U-shaped pattern suggests mild residual non-linearity.
+Normality: The Q-Q Plot shows good alignment with the 45-degree line, suggesting that the log transformation effectively normalized the residuals.
+Homoscedasticity: The residuals exhibit a consistent spread across fitted values, indicating constant variance and improved homoscedasticity after the transformation.
+Influential Points: The Leverage and Cook’s Distance Plots reveal no significant influential observations, with all Cook’s distances well below the critical value of 1.
+
+
+## 12 Estimated Model for M1
+
+$\hat{\log(\text{Amount})} = -12.34 + 0.89(\text{Recency}) + 1.56(\log(\text{AvgSpent12})) - 2.78(\text{Card})$
+ 
+Since both Recency and Card have p-value > 0.05 indicating they are not statistically significant at 5%; therefore, they can removed.
+
+## 13 
+
+```{r}
+anova(M1)
+```
+
+
+The null hypothesis and alternative hypothesis are:
+
+$H_0: \beta_1 = \beta_2 = \beta_3 = 0$ (None of the predictors have a significant relationship with the response)
+
+$H_1: \text{At least one } \beta_i \neq 0, \, i \in \{1, 2, 3\}$ (At least one predictor has a significant relationship with the response)
+
+#### Decision Criterion:
+Reject $H_0$ if the p-value < 0.05.
+
+#### Statistical Decision:
+1. **Recency**:
+   - F-value = 30.29, p-value = 1.423e-06.
+   - Since p-value < 0.05, we reject $H_0$ for Recency. It is statistically significant.
+2. **logAvgSpent12**:
+   - F-value = 336.23, p-value < 2.2e-16.
+   - Since p-value < 0.05, we reject $H_0$ for logAvgSpent12. It is highly significant.
+3. **Card**:
+   - F-value = 1.06, p-value = 0.308.
+   - Since p-value > 0.05, we fail to reject $H_0$ for Card. It is not statistically significant.
+
+#### Conclusion:
+At the 5% significance level, both Recency and logAvgSpent12 have a significant linear relationship with the log-transformed response variable (log(Amount)), while Card does not. The model fit could be improved by considering the removal of Card as a predictor.
+
+
+
+## 14
+
+Intercept (0.6239)
+Baseline log amount when Recency, logAvgSpent12, and Card are zero. It's mostly a reference point.
+
+Recency (−0.0021):
+For each additional month since the last purchase, the log amount spent decreases slightly, suggesting that customers who haven't shopped recently tend to spend less.
+
+logAvgSpent12 (1.1263):
+
+A strong positive relationship: A 1-unit increase in log average spending leads to a 1.1263 unit increase in the log amount spent. Higher average spenders tend to spend more in their latest purchase.
+
+Card (0.0795):
+
+Having a store card slightly increases the log amount spent, but the effect is small and not statistically significant.
+
+
+## 15
+
+```{r}
+# SLR of logAmount and logAvgSpent12
+M2 <- lm(LogAmount ~ logAvgSpent12, data = Clothing)
+
+summary(M2)
+```
+
+```{r}
+# Comparing M1 and M2 anova tables
+anova(M1, M2)
+
+```
+Since the p-value(0.4955) > 0.05 I would prefer M2 as it is a simple regression model and provides a better fit compared to M1 and there's also not a huge risk of over-fitting in the model. Also, p-value < 0.05 suggests that there isn't any real need to include recency and card in the model as they barely improve the model.
+
+

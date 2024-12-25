@@ -1,0 +1,5 @@
+"0","#optimal set of predictor variables"
+"0","bestfits <- regsubsets(Price ~ KmDriven + FuelType + Transmission +  Mileage + Engine + Power + Age + Seats,"
+"0","                       data = train, nbest = 2)"
+"0",""
+"0","plot(bestfits, scale = ""adjr2"")"
