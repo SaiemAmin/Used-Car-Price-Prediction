@@ -1,4 +1,0 @@
-"0","auto <- read.csv(""auto.csv"")"
-"0","#auto_new <- read.csv(""auto.csv"")"
-"0","auto <- select(auto, -1)"
-"0","head(auto, 4)"

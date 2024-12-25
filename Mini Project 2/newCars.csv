@@ -1,7 +1,0 @@
-"carID","KmDriven","FuelType","Transmission","Mileage","Engine","Power","Age","Seats","Price"
-"MS44",15000,"Petrol","Automatic",18,1462,103,4,5,700000
-"BX48",28000,"Petrol","Automatic",14,2998,335,6,5,3200000
-"MX54",26000,"Diesel","Manual",20,1497,115,5,5,700000
-"AA56",28000,"Diesel","Automatic",17,1968,187,6,5,2600000
-"HB83",28000,"Diesel","Manual",21,1498,98,6,7,850000
-"AQ85",30000,"Diesel","Automatic",14,2967,245,7,7,3000000

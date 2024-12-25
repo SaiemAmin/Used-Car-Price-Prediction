@@ -1,6 +1,0 @@
-"0","#optimal set of predictor variables"
-"0","bestfits <- regsubsets(Price ~ KmDriven + FuelType + Transmission +  Mileage + Engine + Power + Age + Seats,"
-"0","                       data = train, nbest = 2)"
-"2","Error in regsubsets(Price ~ KmDriven + FuelType + Transmission + Mileage +  : 
-  could not find function ""regsubsets""
-"

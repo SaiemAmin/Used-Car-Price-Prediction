@@ -1,5 +1,0 @@
-"0",""
-"0","# Build a linear regression model with Mileage × Age and FuelType × Engine interactions"
-"0","model <- lm(log(Price) ~ Mileage * Age + FuelType * Engine + Transmission + Power + Seats, "
-"0","            data = train)"
-"0",""

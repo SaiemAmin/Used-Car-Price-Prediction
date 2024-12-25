@@ -1,8 +1,0 @@
-"0",""
-"0","residuals <- residuals(log_model)"
-"0",""
-"0","residual_plot <- plot(log_fitted_values, residuals(log_model),"
-"0","     xlab = ""Fitted Values"","
-"0","     ylab = ""Residuals"","
-"0","     main = ""Residuals"","
-"0","     col = c(""red"",""blue"",""green"")[as.factor(auto$cyl)])"
